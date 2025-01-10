@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import MemberService from '../services/MemberService';
+import { useNavigate } from 'react-router-dom';
 
 const Create = () => {
 
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     MemberId: 0,
     MemberName: '',
@@ -39,6 +41,7 @@ const Create = () => {
     try {
       const response = await MemberService.create(data);
       console.log('Member created successfully:', response);
+      navigate(`/member`)
     } catch (err) {
       console.error('Error creating member:', err);
     }

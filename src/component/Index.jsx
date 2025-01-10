@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import MemberService from '../services/MemberService'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
 const Index = () => {
 
   const [member , setMember] = useState([])
   const [loading , setLoading] = useState(true)
-
+  const navigate = useNavigate()
 
   useEffect(()=>{
     getAllMember();
@@ -31,6 +32,7 @@ const Index = () => {
 
   const handleEdit = (id) =>{
     alert(id)
+    navigate(`/member/edit/${id}`)
   }
  
 
