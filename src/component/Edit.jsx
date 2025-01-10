@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import MemberService from '../services/MemberService';
 
 const Edit = () => {
-  const { id } = useParams();
+  const  para  = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     MemberId: 0,
@@ -17,13 +17,15 @@ const Edit = () => {
   useEffect(() => {
     const fetchMember = async () => {
       try {
-        const data = await MemberService.getAllMemberById(id);
+        const data = await MemberService.getAllMemberById(para.id);
+        console.log('getMember',data);
+        
         setFormData({
-          MemberId: data.MemberId,
-          MemberName: data.MemberName,
-          MemberAddress: data.MemberAddress,
-          MemberTypeId: data.MemberTypeId,
-          MemberPhoto: null, // No need to pre-fill files
+          MemberId: data.memberId,
+          MemberName: data.memberName,
+          MemberAddress: data.memberAddress,
+          MemberTypeId: data.memberTypeName,
+          MemberPhoto: null, 
           MemberSignature: null,
         });
       } catch (err) {
@@ -32,7 +34,7 @@ const Edit = () => {
     };
 
     fetchMember();
-  }, [id]);
+  }, [para.id]);
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
