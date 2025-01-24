@@ -2,6 +2,9 @@ import axios from "axios"
 
 const baseUrl = 'http://localhost:5288/api/Members/';
 
+const baseUrlType = 'http://localhost:5288/api/MemberTypes/';
+
+
 const MemberService =  {
    
     getAllMember : async () =>{
@@ -16,6 +19,21 @@ const MemberService =  {
             
         }
     },
+
+
+    getAllMemberType : async () =>{
+        try {
+            const res = await axios.get(baseUrlType)
+            console.log(res);
+            
+            return res.data;
+        } catch (err){
+            console.error(err);
+            throw new Error("error get");
+            
+        }
+    },
+
 
 
     getAllMemberById : async (memberId) =>{

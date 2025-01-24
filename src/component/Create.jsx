@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import MemberService from '../services/MemberService';
 import { useNavigate } from 'react-router-dom';
 
 const Create = () => {
 
+  const [type , setType] = useState([])
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     MemberId: 0,
@@ -21,6 +22,29 @@ const Create = () => {
       [name]: type === 'file' ? files[0] : value,
     });
   };
+
+
+  useEffect(()=>{
+    getAlltype();
+   } , []
+  )
+
+  const getAlltype = async () => {
+    try{
+    
+      debugger
+      const data  = await MemberService.getAllMemberType();
+      console.log(data)
+      setType(data);
+      
+    } catch (err) {
+      console.error(err);
+      
+      
+    }
+  }
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,22 +88,19 @@ const Create = () => {
       </div>
       <div>
         <label>Member Address:</label>
-        <input
-          type="text"
-          name="MemberAddress"
-          value={formData.MemberAddress}
-          onChange={handleChange}
-        />
+        <input type="text" name="MemberAddress" value={formData.MemberAddress} onChange={handleChange} />
       </div>
       <div>
-        <label>Member Type ID:</label>
-        <input
-          type="number"
-          name="MemberTypeId"
-          value={formData.MemberTypeId}
-          onChange={handleChange}
-        />
-      </div>
+          <label>Member Type:</label>
+          <select  name="memberTypeId"  value={formData.memberTypeId} onChange={handleChange} >
+            <option value={0} disabled>
+              Select a Member Type
+            </option>
+            {type.map((t) => (
+              <option key={t.memberTypeId} value={t.memberTypeId}> {t.memberTypeName} </option>
+            ))}
+          </select>
+        </div>
       <div>
         <label>Member Photo:</label>
         <input
