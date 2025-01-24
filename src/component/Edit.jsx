@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import MemberService from '../services/MemberService';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const Edit = () => {
-  const para = useParams();
+  const [type, setType] = useState([]); // For member types dropdown
   const navigate = useNavigate();
-  const [type, setType] = useState([]); // State for member types
+  const { id } = useParams(); // Captures the member ID from the route
   const [formData, setFormData] = useState({
     MemberId: 0,
     MemberName: '',
@@ -14,45 +14,58 @@ const Edit = () => {
     MemberPhoto: null,
     MemberSignature: null,
   });
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
 
-  useEffect(() => {
-    // Fetch member details and member types
-    const fetchData = async () => {
-      try {
-        const [memberData, memberTypes] = await Promise.all([
-          MemberService.getAllMemberById(para.id),
-          MemberService.getAllMemberType(),
-        ]);
-
-        setFormData({
-          MemberId: memberData.memberId,
-          MemberName: memberData.memberName,
-          MemberAddress: memberData.memberAddress,
-          MemberTypeId: memberData.memberTypeId,
-          MemberPhoto: null, // Reset to null since it's file input
-          MemberSignature: null, // Reset to null since it's file input
-        });
-
-        setType(memberTypes); // Set the member types for the dropdown
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchData();
-  }, [para.id]);
-
+  // Handles input changes (text, dropdown, and file inputs)
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'file' ? files[0] : value,
-    });
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: type === 'file' ? (files.length > 0 ? files[0] : null) : value,
+    }));
   };
 
+  // Fetch all member types
+  const getAllTypes = async () => {
+    try {
+      const data = await MemberService.getAllMemberType();
+      setType(data);
+    } catch (err) {
+      console.error('Error fetching member types:', err);
+      setError('Failed to fetch member types.');
+    }
+  };
+
+  // Fetch member details by ID
+  const getMemberDetails = async (memberId) => {
+    try {
+      const data = await MemberService.getAllMemberById(memberId);
+      setFormData({
+        MemberId : data.memberId,
+        MemberName: data.memberName,
+        MemberAddress: data.memberAddress,
+        MemberTypeId: data.memberTypeId,
+        MemberPhoto: null, // File inputs cannot be pre-filled
+        MemberSignature: null,
+      });
+      setLoading(false); // Data is ready
+    } catch (err) {
+      console.error('Error fetching member details:', err);
+      setError('Failed to fetch member details.');
+    }
+  };
+
+  // Trigger data loading on component mount
+  useEffect(() => {
+    setLoading(true); // Set loading state
+    getAllTypes(); // Fetch member types
+    getMemberDetails(id); // Fetch specific member details
+  }, [id]);
+
+  // Handle form submission to update member
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const data = new FormData();
     data.append('MemberId', formData.MemberId);
     data.append('MemberName', formData.MemberName);
@@ -65,17 +78,36 @@ const Edit = () => {
       data.append('MemberSignature', formData.MemberSignature);
     }
 
+    // Debugging FormData contents
+    for (const [key, value] of data.entries()) {
+      console.log(`${key}:`, value);
+    }
+
     try {
-      await MemberService.update(para.id, data);
-      alert('Member updated successfully!');
-      navigate('/members'); // Navigate back to the members list
+      console.log('sub', data);
+      
+      await MemberService.update(id, data); // Update member by ID
+      console.log('Member updated successfully');
+      navigate('/member'); // Redirect to member list
     } catch (err) {
-      console.error(err);
+      console.error('Error updating member:', err);
+      setError('Failed to update member.');
     }
   };
 
+  // Display error if fetching data failed
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  // Show loading indicator
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <>
+    <div>
+      <h1>Edit Member</h1>
       <form onSubmit={handleSubmit}>
         <div>
           <label>Member Name:</label>
@@ -84,6 +116,7 @@ const Edit = () => {
             name="MemberName"
             value={formData.MemberName}
             onChange={handleChange}
+            required
           />
         </div>
         <div>
@@ -93,6 +126,7 @@ const Edit = () => {
             name="MemberAddress"
             value={formData.MemberAddress}
             onChange={handleChange}
+            required
           />
         </div>
         <div>
@@ -101,13 +135,14 @@ const Edit = () => {
             name="MemberTypeId"
             value={formData.MemberTypeId}
             onChange={handleChange}
+            required
           >
             <option value={0} disabled>
               Select a Member Type
             </option>
             {type.map((t) => (
-              <option key={t.MemberTypeId} value={t.MemberTypeId}>
-                {t.MemberTypeName}
+              <option key={t.memberTypeId} value={t.memberTypeId}>
+                {t.memberTypeName}
               </option>
             ))}
           </select>
@@ -130,9 +165,9 @@ const Edit = () => {
             onChange={handleChange}
           />
         </div>
-        <button type="submit">Update Member</button>
+        <button type="submit">Update</button>
       </form>
-    </>
+    </div>
   );
 };
 
