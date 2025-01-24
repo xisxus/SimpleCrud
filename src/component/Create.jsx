@@ -63,6 +63,7 @@ const Create = () => {
     }
 
     try {
+      console.log('this is submit data', data)
       const response = await MemberService.create(data);
       console.log('Member created successfully:', response);
       navigate(`/member`)

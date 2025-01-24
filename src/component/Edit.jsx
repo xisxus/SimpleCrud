@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MemberService from '../services/MemberService';
 
 const Edit = () => {
-  const  para  = useParams();
+  const para = useParams();
   const navigate = useNavigate();
+  const [type, setType] = useState([]); // State for member types
   const [formData, setFormData] = useState({
     MemberId: 0,
     MemberName: '',
@@ -15,25 +16,30 @@ const Edit = () => {
   });
 
   useEffect(() => {
-    const fetchMember = async () => {
+    // Fetch member details and member types
+    const fetchData = async () => {
       try {
-        const data = await MemberService.getAllMemberById(para.id);
-        console.log('getMember',data);
-        
+        const [memberData, memberTypes] = await Promise.all([
+          MemberService.getAllMemberById(para.id),
+          MemberService.getAllMemberType(),
+        ]);
+
         setFormData({
-          MemberId: data.memberId,
-          MemberName: data.memberName,
-          MemberAddress: data.memberAddress,
-          MemberTypeId: data.memberTypeName,
-          MemberPhoto: null, 
-          MemberSignature: null,
+          MemberId: memberData.memberId,
+          MemberName: memberData.memberName,
+          MemberAddress: memberData.memberAddress,
+          MemberTypeId: memberData.memberTypeId,
+          MemberPhoto: null, // Reset to null since it's file input
+          MemberSignature: null, // Reset to null since it's file input
         });
+
+        setType(memberTypes); // Set the member types for the dropdown
       } catch (err) {
         console.error(err);
       }
     };
 
-    fetchMember();
+    fetchData();
   }, [para.id]);
 
   const handleChange = (e) => {
@@ -60,67 +66,74 @@ const Edit = () => {
     }
 
     try {
-      await MemberService.update(id, data);
+      await MemberService.update(para.id, data);
       alert('Member updated successfully!');
-      navigate('/members'); // Navigate back to the index page
+      navigate('/members'); // Navigate back to the members list
     } catch (err) {
       console.error(err);
     }
   };
 
   return (
-    <>   
-     <form onSubmit={handleSubmit}>
-      <div>
-        <label>Member Name:</label>
-        <input
-          type="text"
-          name="MemberName"
-          value={formData.MemberName}
-          onChange={handleChange}
-        />
-      </div>
-      <div>
-        <label>Member Address:</label>
-        <input
-          type="text"
-          name="MemberAddress"
-          value={formData.MemberAddress}
-          onChange={handleChange}
-        />
-      </div>
-      <div>
-        <label>Member Type ID:</label>
-        <input
-          type="number"
-          name="MemberTypeId"
-          value={formData.MemberTypeId}
-          onChange={handleChange}
-        />
-      </div>
-      <div>
-        <label>Member Photo:</label>
-        <input
-          type="file"
-          name="MemberPhoto"
-          accept="image/*"
-          onChange={handleChange}
-        />
-      </div>
-      <div>
-        <label>Member Signature:</label>
-        <input
-          type="file"
-          name="MemberSignature"
-          accept="image/*"
-          onChange={handleChange}
-        />
-      </div>
-      <button type="submit">Update Member</button>
-    </form>
+    <>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Member Name:</label>
+          <input
+            type="text"
+            name="MemberName"
+            value={formData.MemberName}
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <label>Member Address:</label>
+          <input
+            type="text"
+            name="MemberAddress"
+            value={formData.MemberAddress}
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <label>Member Type:</label>
+          <select
+            name="MemberTypeId"
+            value={formData.MemberTypeId}
+            onChange={handleChange}
+          >
+            <option value={0} disabled>
+              Select a Member Type
+            </option>
+            {type.map((t) => (
+              <option key={t.MemberTypeId} value={t.MemberTypeId}>
+                {t.MemberTypeName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Member Photo:</label>
+          <input
+            type="file"
+            name="MemberPhoto"
+            accept="image/*"
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <label>Member Signature:</label>
+          <input
+            type="file"
+            name="MemberSignature"
+            accept="image/*"
+            onChange={handleChange}
+          />
+        </div>
+        <button type="submit">Update Member</button>
+      </form>
     </>
-
   );
-}
+};
 
-export default Edit
+export default Edit;
